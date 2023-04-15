@@ -1,14 +1,16 @@
 <?php
 
-    use App\Http\Controllers\Admin\Pages\Auth\RegisterController;
-    use App\Http\Controllers\Admin\Pages\Dashboards\WalletController;
-    use App\Http\Controllers\Admin\Pages\Dashboards\WinningTicketController;
-    use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\Pages\Auth\RegisterController;
+use App\Http\Controllers\Admin\Pages\Dashboards\WalletController;
+use App\Http\Controllers\Admin\Pages\Dashboards\CustomeBalanceController;
+use App\Http\Controllers\Admin\Pages\Dashboards\WinningTicketController;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Pages\Auth\LoginController;
 use App\Http\Controllers\Admin\Pages\HomeController;
 use App\Http\Controllers\Admin\Pages\Settings\UserController;
 use App\Http\Controllers\Admin\Pages\Settings\PermissionController;
 use App\Http\Controllers\Admin\Pages\Settings\RoleController;
+use App\Http\Controllers\Admin\Pages\Bets\BichaoController;
 use App\Http\Controllers\Admin\Pages\Bets\ClientController;
 use App\Http\Controllers\Admin\Pages\Bets\CompetitionController;
 use App\Http\Controllers\Admin\Pages\Bets\TypeGameController;
@@ -25,6 +27,7 @@ use App\Http\Controllers\Admin\Pages\Dashboards\ExtractPointsController;
 use App\Http\Controllers\Admin\Pages\Dashboards\RankingController;
 use App\Http\Controllers\Admin\Pages\Settings\QualificationController;
 use App\Http\Controllers\Admin\Pages\Reports\ReportController;
+
 
 // recuperar senha controller
 use App\Http\Controllers\ForgotPasswordController;
@@ -53,7 +56,7 @@ Route::get('/register', [RegisterController::class, 'showRegisterForm'])->name('
 Route::post('/register', [RegisterController::class, 'create'])->name('register');
 Route::get('/updateStatusPaymentCron/2de1ce3ddcb20dda6e6ea9fba8031de4/', [WalletController::class, 'updateStatusPayment'])->name('updateStatusPaymentCron');
 
-Route::get('/', [LoginController::class, 'showLoginForm'])->middleware('guest:admin');
+Route::get('/', [LoginController::class, 'showLoginForm'])->middleware(['guest:admin']);
 
 Route::middleware('guest:web')->group(function () {
     Route::prefix('games')->name('games.')->group(function () {
@@ -67,7 +70,7 @@ Route::middleware('guest:web')->group(function () {
 Route::prefix('/admin')->name('admin.')->group(function () {
     Route::middleware('guest:admin')->group(function () {
         Route::get('/login', [LoginController::class, 'showLoginForm'])->name('get.login');
-        Route::post('/login', [LoginController::class, 'login'])->name('post.login');
+        Route::post('/login', [LoginController::class, 'login'])->name('post.login')->middleware('is.active');
     });
     Route::middleware(['auth:admin', 'check.openModal'])->group(function () {
         Route::get('change-locale/{locale}', [HomeController::class, 'changeLocale'])->name('changeLocale');
@@ -112,8 +115,31 @@ Route::prefix('/admin')->name('admin.')->group(function () {
                 Route::get('/updateStatusPayment/2de1ce3ddcb20dda6e6ea9fba8031de4/', [WalletController::class, 'updateStatusPayment'])->name('updateStatusPayment');
                 Route::get('/thanks/', [WalletController::class, 'thanks'])->name('thanks');
             });
+            Route::prefix('customer')->name('customer.')->group(function (){
+                Route::get('/', [CustomeBalanceController::class, 'index'])->name('balance');
+                Route::get('/lock/{id}', [CustomeBalanceController::class, 'lock_account'])->name('lock');
+                Route::get('/unlock/{id}', [CustomeBalanceController::class, 'unlock_account'])->name('unlock');
+                Route::get('/contact/made{id}', [CustomeBalanceController::class, 'contact_made'])->name('contact.made');
+                Route::get('/contact/not/made{id}', [CustomeBalanceController::class, 'contact_not_made'])->name('contact.not.made');
+                Route::put('/save/{id}', [CustomeBalanceController::class, 'save_changes'])->name('save');
+            });
         });
         Route::prefix('/bets')->name('bets.')->group(function () {
+            Route::prefix('/bichao')->name('bichao.')->group(function (){
+                Route::get('/', [BichaoController::class, 'index'])->name('index');
+                Route::get('centena', [BichaoController::class, 'centena'])->name('centena');
+                Route::get('cotacao', [BichaoController::class, 'cotacao'])->name('cotacao');
+                Route::get('group', [BichaoController::class, 'group'])->name('group');
+                Route::get('dezena', [BichaoController::class, 'dezena'])->name('dezena');
+                Route::get('milhar/centena', [BichaoController::class, 'milhar_centena'])->name('milhar.centena');
+                Route::get('minhas/apostas', [BichaoController::class, 'my_bets'])->name('minhas.apostas');
+                Route::get('terno/dezena', [BichaoController::class, 'terno_dezena'])->name('terno.dezena');
+                Route::get('terno/grupo', [BichaoController::class, 'terno_grupo'])->name('terno.grupo');
+                Route::get('duque/dezena', [BichaoController::class, 'duque_dezena'])->name('duque.dezena');
+                Route::get('duque/grupo', [BichaoController::class, 'duque_grupo'])->name('duque.grupo');
+                Route::get('resultados', [BichaoController::class, 'results'])->name('resultados');
+            });
+
             Route::resource('clients', ClientController::class);
             Route::resource('competitions', CompetitionController::class);
             Route::resource('type_games', TypeGameController::class);
